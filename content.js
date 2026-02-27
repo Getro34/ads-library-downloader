@@ -183,10 +183,10 @@ class SimpleAdsDownloader {
   }
 }
 
-// Messages du popup
+// Messages du popup - compatible avec l'ancien système
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getStatus') {
-    const stats = downloader ? downloader.getStats() : { totalVideos: 0, processedVideos: 0, downloads: 0 };
+    const stats = downloaderInstance ? downloaderInstance.getStats() : { totalVideos: 0, processedVideos: 0, downloads: 0 };
     sendResponse({
       success: true,
       adsFound: stats.totalVideos,
@@ -196,8 +196,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   if (request.action === 'downloadAll') {
-    if (downloader) {
-      downloader.addDownloadButtons();
+    if (downloaderInstance) {
+      downloaderInstance.addDownloadButtons();
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false, error: 'Extension non initialisée' });
+    }
+    return true;
+  }
+  
+  if (request.action === 'downloadAllAds') {
+    if (downloaderInstance) {
+      downloaderInstance.addDownloadButtons();
       sendResponse({ success: true });
     } else {
       sendResponse({ success: false, error: 'Extension non initialisée' });
@@ -207,11 +217,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 // Initialiser l'extension
-let downloader = null;
+let downloaderInstance = null;
 
 function initDownloader() {
   console.log('🚀 Initialisation Simple Ads Downloader');
-  downloader = new SimpleAdsDownloader();
+  downloaderInstance = new SimpleAdsDownloader();
 }
 
 // Initialiser quand la page est prête
