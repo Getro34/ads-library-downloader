@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Ads Downloader</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="popup-container">
+        <header class="popup-header">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <polyline points="7,10 12,15 17,10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="12" y1="15" x2="12" y2="3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <h1>FB Ads Downloader</h1>
+        </header>
+
+        <!-- Loading state -->
+        <div id="loadingState" class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Détection des publicités...</p>
+        </div>
+
+        <main class="popup-content" id="mainContent" style="display: none;">
+            <div class="status-section">
+                <div class="status-item">
+                    <span class="label">Publicités détectées:</span>
+                    <span class="value" id="adsCount">
+                        <div class="loading-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </span>
+                </div>
+                <div class="status-item">
+                    <span class="label">Téléchargements:</span>
+                    <span class="value" id="downloadCount">0</span>
+                </div>
+            </div>
+
+            <div class="actions-section">
+                <button id="downloadAllBtn" class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Télécharger toutes les publicités
+                </button>
+                
+                <button id="refreshBtn" class="btn btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M1 4v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="m21 20-5-5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="m21 4-5 5-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Actualiser la détection
+                </button>
+            </div>
+
+            <div class="filters-section">
+                <h3>🔍 Filtres avancés</h3>
+                
+                <div class="setting-item">
+                    <label for="dateFilter">Filtrer par date:</label>
+                    <select id="dateFilter">
+                        <option value="all">Toutes les publicités</option>
+                        <option value="today">Aujourd'hui</option>
+                        <option value="week">Cette semaine</option>
+                        <option value="month">Ce mois</option>
+                        <option value="3months">3 derniers mois</option>
+                        <option value="custom">Période personnalisée</option>
+                    </select>
+                </div>
+
+                <div class="setting-item" id="customDateRange" style="display: none;">
+                    <label>Période personnalisée:</label>
+                    <div class="date-inputs">
+                        <input type="date" id="startDate" placeholder="Date début">
+                        <span>à</span>
+                        <input type="date" id="endDate" placeholder="Date fin">
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <label for="mediaFilter">Type de média:</label>
+                    <select id="mediaFilter">
+                        <option value="all">Tout</option>
+                        <option value="video">Vidéos uniquement</option>
+                        <option value="image">Images uniquement</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <label for="statusFilter">Statut:</label>
+                    <select id="statusFilter">
+                        <option value="all">Tous</option>
+                        <option value="active">Actives</option>
+                        <option value="inactive">Inactives</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <label for="brandFilter">Marque/Compte:</label>
+                    <input type="text" id="brandFilter" placeholder="Filtrer par nom...">
+                </div>
+
+                <div class="setting-item">
+                    <button id="applyFilters" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 7V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2l-8 8v6l-4-2V15L3 7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Appliquer les filtres
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>⚙️ Paramètres</h3>
+                
+                <div class="setting-item">
+                    <label for="downloadFormat">Format de téléchargement:</label>
+                    <select id="downloadFormat">
+                        <option value="original">Original</option>
+                        <option value="jpg">JPG</option>
+                        <option value="png">PNG</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <label for="downloadQuality">Qualité:</label>
+                    <select id="downloadQuality">
+                        <option value="high">Haute</option>
+                        <option value="medium">Moyenne</option>
+                        <option value="low">Basse</option>
+                    </select>
+                </div>
+
+                <div class="setting-item checkbox-item">
+                    <input type="checkbox" id="includeMetadata" checked>
+                    <label for="includeMetadata">Nommage intelligent + métadonnées</label>
+                </div>
+
+                <div class="setting-item checkbox-item">
+                    <input type="checkbox" id="autoDownload">
+                    <label for="autoDownload">Téléchargement automatique</label>
+                </div>
+            </div>
+
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">0%</div>
+            </div>
+        </main>
+
+        <footer class="popup-footer">
+            <div class="help-links">
+                <a href="#" id="helpBtn">Aide</a>
+                <span>•</span>
+                <a href="#" id="aboutBtn">À propos</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="popup_filters.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>
