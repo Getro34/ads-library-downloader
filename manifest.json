@@ -19,7 +19,7 @@
       "matches": [
         "https://*.facebook.com/ads/library/*"
       ],
-      "js": ["content_debug.js"],
+      "js": ["content.js"],
       "css": ["styles.css"]
     }
   ],
@@ -27,7 +27,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "popup_debug.html",
+    "default_popup": "popup_simple.html",
     "default_title": "Facebook Ads Downloader"
   },
   "icons": {
