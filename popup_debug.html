@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { width: 300px; padding: 20px; font-family: Arial, sans-serif; }
+        button { padding: 10px; margin: 5px; width: 100%; }
+        #output { background: #f0f0f0; padding: 10px; margin: 10px 0; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h3>🔧 Debug Facebook Ads Extension</h3>
+    
+    <button id="testBtn">Test Détection</button>
+    <button id="reloadBtn">Recharger Script</button>
+    
+    <div id="output">En attente...</div>
+
+    <script>
+        document.getElementById('testBtn').addEventListener('click', () => {
+            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id, {action: 'test'}, (response) => {
+                    document.getElementById('output').textContent = 
+                        response ? JSON.stringify(response, null, 2) : 'Pas de réponse';
+                });
+            });
+        });
+        
+        document.getElementById('reloadBtn').addEventListener('click', () => {
+            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                chrome.tabs.reload(tabs[0].id);
+                document.getElementById('output').textContent = 'Page rechargée';
+            });
+        });
+    </script>
+</body>
+</html>

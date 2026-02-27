@@ -136,112 +136,36 @@ class FacebookAdsDownloader {
     return isVisible && isDisplayed;
   }
 
-  // Trouver les conteneurs de publicités - VERSION ROBUSTE
+  // Trouver les conteneurs de publicités - VERSION SIMPLE QUI MARCHE
   findAdContainers(container) {
-    console.log('🔍 === DÉBUT DÉTECTION DES PUBLICITÉS ===');
-    console.log('📍 URL:', window.location.href);
+    console.log('🔍 DÉTECTION SIMPLIFIÉE');
     
-    // Vérifier qu'on est bien sur Facebook Ads Library
-    if (!window.location.href.includes('facebook.com/ads/library')) {
-      console.log('❌ Pas sur Facebook Ads Library');
-      return [];
-    }
+    // Essayer le sélecteur standard Facebook Ads Library
+    let ads = container.querySelectorAll('[data-testid="ad_library_result"]');
+    console.log(`📊 Sélecteur standard: ${ads.length} ads trouvées`);
     
-    const adContainers = new Set(); // Utiliser Set pour éviter les doublons
-    
-    // Stratégie 1: Chercher par data-testid (le plus fiable)
-    let elements = container.querySelectorAll('[data-testid="ad_library_result"]');
-    console.log(`🧪 Stratégie 1 - data-testid="ad_library_result": ${elements.length} éléments`);
-    
-    if (elements.length > 0) {
-      elements.forEach(el => adContainers.add(el));
-    } else {
-      // Stratégie 2: Chercher par structure (vidéos et images avec conteneurs parents)
-      const videos = container.querySelectorAll('video');
-      const images = container.querySelectorAll('img[src*="fbcdn"], img[src*="scontent"]');
+    // Si ça marche pas, essayer tous les divs qui ont des vidéos ou images
+    if (ads.length === 0) {
+      console.log('🔄 Fallback: chercher divs avec média');
+      const allDivs = container.querySelectorAll('div');
+      const candidates = [];
       
-      console.log(`🧪 Stratégie 2 - Vidéos: ${videos.length}, Images FB: ${images.length}`);
-      
-      // Traiter les vidéos
-      videos.forEach(video => {
-        let parent = video.closest('[role="article"]') || 
-                    video.closest('div[style*="border"]') ||
-                    video.closest('div[class*="border"]');
-                    
-        if (!parent) {
-          // Remonter jusqu'à un conteneur de taille appropriée
-          parent = video.parentElement;
-          let attempts = 0;
-          while (parent && parent !== container && attempts < 10) {
-            const rect = parent.getBoundingClientRect();
-            if (rect.height > 200 && rect.width > 300) break;
-            parent = parent.parentElement;
-            attempts++;
-          }
-        }
+      allDivs.forEach(div => {
+        const hasVideo = div.querySelector('video');
+        const hasImg = div.querySelector('img[src*="fbcdn"], img[src*="scontent"]');
+        const rect = div.getBoundingClientRect();
         
-        if (parent && parent !== container) {
-          adContainers.add(parent);
+        if ((hasVideo || hasImg) && rect.width > 250 && rect.height > 150) {
+          candidates.push(div);
         }
       });
       
-      // Traiter les images si pas assez de vidéos
-      if (adContainers.size < 10) {
-        images.forEach(img => {
-          let parent = img.closest('[role="article"]') || 
-                      img.closest('div[style*="border"]') ||
-                      img.closest('div[class*="border"]');
-                      
-          if (!parent) {
-            parent = img.parentElement;
-            let attempts = 0;
-            while (parent && parent !== container && attempts < 8) {
-              const rect = parent.getBoundingClientRect();
-              if (rect.height > 150 && rect.width > 250) break;
-              parent = parent.parentElement;
-              attempts++;
-            }
-          }
-          
-          if (parent && parent !== container && parent.querySelector('video, img')) {
-            adContainers.add(parent);
-          }
-        });
-      }
+      console.log(`📊 Candidats trouvés: ${candidates.length}`);
+      ads = candidates;
     }
     
-    // Stratégie 3: Fallback - chercher par article role
-    if (adContainers.size === 0) {
-      console.log('🧪 Stratégie 3 - Fallback par role="article"');
-      const articles = container.querySelectorAll('div[role="article"]');
-      
-      articles.forEach(article => {
-        if (article.querySelector('video, img')) {
-          adContainers.add(article);
-        }
-      });
-    }
-    
-    // Convertir Set en Array et nettoyer
-    const finalContainers = Array.from(adContainers).filter(el => {
-      const rect = el.getBoundingClientRect();
-      const hasMedia = el.querySelector('video, img[src*="fbcdn"], img[src*="scontent"]');
-      return rect.width > 200 && rect.height > 100 && hasMedia;
-    });
-    
-    console.log(`✅ Total conteneurs trouvés: ${finalContainers.length}`);
-    
-    if (finalContainers.length > 0) {
-      console.log('🎯 Échantillon détecté:');
-      finalContainers.slice(0, 2).forEach((el, i) => {
-        const rect = el.getBoundingClientRect();
-        console.log(`   ${i + 1}. Taille: ${rect.width}x${rect.height}`);
-        console.log(`      Vidéos: ${el.querySelectorAll('video').length}`);
-        console.log(`      Images: ${el.querySelectorAll('img').length}`);
-      });
-    }
-
-    return finalContainers;
+    console.log(`✅ RÉSULTAT: ${ads.length} publicités détectées`);
+    return Array.from(ads);
   }
 
   // Vérifier si c'est un conteneur de publicité valide (assoupli)
